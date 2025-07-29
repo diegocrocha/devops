@@ -1,0 +1,4 @@
+{
+  "topic": "my-topic",
+  "target_url": "http://localhost:8080/endpoint"
+}
