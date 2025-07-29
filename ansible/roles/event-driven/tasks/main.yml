@@ -30,7 +30,7 @@
       ExecStart=/opt/eventdriven-go/app
       WorkingDirectory=/opt/eventdriven-go
       Restart=always
-      User=ubuntu
+      User={{ ansible_user }}
 
       [Install]
       WantedBy=multi-user.target
