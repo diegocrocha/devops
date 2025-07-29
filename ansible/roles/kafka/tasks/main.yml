@@ -1,0 +1,60 @@
+- name: Instala dependencias
+  apt:
+    name:
+      - openjdk-11-jre-headless
+      - wget
+    update_cache: yes
+
+- name: Baixa o Kafka
+  get_url:
+    url: https://downloads.apache.org/kafka/3.5.1/kafka_2.13-3.5.1.tgz
+    dest: /tmp/kafka.tgz
+    mode: '0644'
+
+- name: Extrai o Kafka
+  unarchive:
+    src: /tmp/kafka.tgz
+    dest: /opt
+    remote_src: yes
+
+- name: Cria link simbolico para /opt/kafka
+  file:
+    src: /opt/kafka_2.13-3.5.1
+    dest: /opt/kafka
+    state: link
+
+- name: Configura o Kafka
+  copy:
+    dest: /opt/kafka/config/server.properties
+    content: |
+      broker.id=0
+      log.dirs=/tmp/kafka-logs
+      listeners=PLAINTEXT://:9092
+      zookeeper.connect=localhost:2181
+
+- name: Cria servico systemd
+  copy:
+    content: |
+      [Unit]
+      Description=Apache Kafka Service
+      After=network.target
+
+      [Service]
+      ExecStart=/opt/kafka/bin/kafka-server-start.sh /opt/kafka/config/server.properties
+      ExecStop=/opt/kafka/bin/kafka-server-stop.sh
+      Restart=on-failure
+      User=ubuntu
+
+      [Install]
+      WantedBy=multi-user.target
+    dest: /etc/systemd/system/kafka.service
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Ativa e inicia o servico
+  systemd:
+    name: kafka
+    enabled: yes
+    state: started
+    daemon_reload: yes
