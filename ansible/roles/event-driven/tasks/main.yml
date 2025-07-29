@@ -1,0 +1,56 @@
+- name: Instala dependências
+  apt:
+    name:
+      - golang
+      - git
+    update_cache: yes
+
+- name: Clona o repositório do GitHub
+  git:
+    repo: 'https://github.com/diegocrocha/event-driven.git'
+    dest: /opt/eventdriven-go
+    version: main 
+    force: yes
+
+- name: Compila o binário
+  shell: |
+    cd /opt/eventdriven-go
+    /usr/bin/go build -o app
+  args:
+    executable: /bin/bash
+
+- name: Cria serviço systemd
+  copy:
+    content: |
+      [Unit]
+      Description=Go Event Driven App
+      After=network.target
+
+      [Service]
+      ExecStart=/opt/eventdriven-go/app
+      WorkingDirectory=/opt/eventdriven-go
+      Restart=always
+      User=ubuntu
+
+      [Install]
+      WantedBy=multi-user.target
+    dest: /etc/systemd/system/eventdriven.service
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Ativa e inicia o serviço
+  systemd:
+    name: eventdriven
+    enabled: yes
+    state: restarted
+
+- name: Verifica o status do serviço
+  systemd:    
+    name: eventdriven
+    state: started
+  register: eventdriven_status
+
+- name: Exibe o status retornado
+  debug:
+    var: eventdriven_status

@@ -1,0 +1,6 @@
+- name: Deploy eventdriven-go app
+  hosts: app
+  become: true
+
+  roles:
+    - eventdriven
